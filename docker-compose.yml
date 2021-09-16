@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+
+  spring-websocket-api:
+    build: ./server
+    image: spring-websocket
+    ports:
+      - "8080:8080"
+
+  user-api:
+    build: ./user-api/server
+    image: dev10-user-api-server
+    environment:
+      DB_URL: jdbc:mysql://user-api-db:3306/dev10_users
+      DB_USERNAME: root
+      DB_PASSWORD: top-secret-password
+      JWT_SECRET_KEY: de8a26d0-f6e8-4470-91d0-ba7a44391281
+    ports:
+      - "5000:5000"
+    depends_on:
+      - user-api-db
+
+  user-api-db:
+    build: ./user-api/database
+    image: dev10-user-api-db
+    volumes:
+      - user-api-db-data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+
+volumes:
+  user-api-db-data:
