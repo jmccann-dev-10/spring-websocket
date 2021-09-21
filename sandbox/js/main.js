@@ -11,6 +11,7 @@ var leaveButton = document.querySelector('#leave-button');
 
 var stompClient = null;
 var username = null;
+var topic = null;
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -20,6 +21,7 @@ var colors = [
 function connect(event) {
     event.preventDefault();
     username = document.querySelector('#name').value.trim();
+    topic = document.querySelector('#topic').value.trim();
 
     if(username) {
         
@@ -28,7 +30,7 @@ function connect(event) {
 
         var socket = new SockJS('http://localhost:8080/ws');
         stompClient = Stomp.over(socket);
-        const headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkZXYxMC11c2Vycy1hcGkiLCJzdWIiOiJqb2huc21pdGgiLCJpZCI6Ijk4M2YxMjI0LWFmNGYtMTFlYi04MzY4LTAyNDJhYzExMDAwMiIsImZpcnN0X25hbWUiOiJKb2huIiwibGFzdF9uYW1lIjoiU21pdGgiLCJlbWFpbF9hZGRyZXNzIjoiam9obkBzbWl0aC5jb20iLCJtb2JpbGVfcGhvbmUiOiI1NTUtNTU1LTU1NTUiLCJyb2xlcyI6IkFETUlOIiwiZXhwIjoxNjMxODkzODMwfQ.W-BcbgMhAXNqcTaB8kLcPKp0UUbL_GYOyiImVChA_fM"}
+        const headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkZXYxMC11c2Vycy1hcGkiLCJzdWIiOiJqb2huc21pdGgiLCJpZCI6Ijk4M2YxMjI0LWFmNGYtMTFlYi04MzY4LTAyNDJhYzExMDAwMiIsImZpcnN0X25hbWUiOiJKb2huIiwibGFzdF9uYW1lIjoiU21pdGgiLCJlbWFpbF9hZGRyZXNzIjoiam9obkBzbWl0aC5jb20iLCJtb2JpbGVfcGhvbmUiOiI1NTUtNTU1LTU1NTUiLCJyb2xlcyI6IkFETUlOIiwiZXhwIjoxNjMyMzE2NDU4fQ.XHPFe_mVYGN8zelkQJt0VtsZ1oyEanLF2cSExNnY9wI"}
         stompClient.connect(headers, onConnected, onError);
     }
 }
@@ -36,10 +38,10 @@ function connect(event) {
 
 function onConnected() {
     // Subscribe to the Public Topic
-    stompClient.subscribe('/topic/public', onMessageReceived);
+    stompClient.subscribe(`/topic/${topic}`, onMessageReceived);
 
     // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.send(`/app/${topic}/chat.addUser`,
         {},
         JSON.stringify({sender: username, type: 'JOIN'})
     )
@@ -64,18 +66,19 @@ function sendMessage(event) {
             content: messageInput.value,
             type: 'CHAT'
         };
-        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+        stompClient.send(`/app/${topic}/chat.sendMessage`, {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
 }
 
 function leaveChat() {
-    stompClient.disconnect(onDisconect)
+    stompClient.disconnect(onDisconect);
 }
 
 function onDisconect() {
     usernamePage.classList.remove("hidden");
     chatPage.classList.add('hidden');
+    messageArea.innerHTML = "";
 }
 
 
@@ -86,7 +89,7 @@ function onMessageReceived(payload) {
 
     if(message.type === 'JOIN') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' joined!';
+        message.content = `${message.sender} joined ${topic}!` ;
     } else if (message.type === 'LEAVE') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' left!';

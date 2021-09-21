@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Component
 public class JwtChannelInterceptor implements ChannelInterceptor {
@@ -26,16 +27,22 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authorization = accessor.getFirstNativeHeader("Authorization");
-            if (authorization != null && authorization.startsWith("Bearer")) {
-                AppUser user = converter.getUserFromToken(authorization.substring(7));
-                if (user != null) {
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
-                    accessor.setUser(authentication);
-                }
-            }
+        switch (accessor.getCommand()) {
+            case CONNECT:
+                parseAuthorizationHeader(accessor);
+                break;
         }
         return message;
+    }
+
+    private void parseAuthorizationHeader(StompHeaderAccessor accessor) {
+        String authorization = accessor.getFirstNativeHeader("Authorization");
+        if (authorization != null && authorization.startsWith("Bearer")) {
+            AppUser user = converter.getUserFromToken(authorization.substring(7));
+            if (user != null) {
+                Authentication auth = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+                accessor.setUser(auth);
+            }
+        }
     }
 }
