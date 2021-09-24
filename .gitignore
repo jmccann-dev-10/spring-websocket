@@ -31,3 +31,4 @@ target/
 
 # npm
 node_modules/
+client/build

@@ -2,9 +2,15 @@ version: "3.9"
 
 services:
 
+  spring-websocket-ui:
+    build: ./client
+    image: spring-websocket-ui
+    ports:
+      - "80:80"
+
   spring-websocket-api:
     build: ./server
-    image: spring-websocket
+    image: spring-websocket-api
     ports:
       - "8080:8080"
 
