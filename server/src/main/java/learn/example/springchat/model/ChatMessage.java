@@ -1,7 +1,10 @@
 package learn.example.springchat.model;
 
+import java.util.UUID;
+
 public class ChatMessage {
 
+    private final UUID id = UUID.randomUUID();
     private MessageType type;
     private String content;
     private String sender;
@@ -10,6 +13,10 @@ public class ChatMessage {
         CHAT,
         JOIN,
         LEAVE
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public MessageType getType() {

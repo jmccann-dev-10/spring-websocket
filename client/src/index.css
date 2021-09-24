@@ -1,0 +1,10 @@
+.no-style {
+  background: none;
+  border: none;
+  color: #533f03;
+  font-weight: bold;
+}
+
+.no-style:hover {
+  text-decoration: underline;
+}

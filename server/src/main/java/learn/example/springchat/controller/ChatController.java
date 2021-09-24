@@ -15,15 +15,17 @@ public class ChatController {
 
     @SendTo("/topic/{chatId}")
     @MessageMapping("{chatId}/chat.sendMessage")
-    public ChatMessage setMessage(@Payload ChatMessage chatMessage) {
+    public ChatMessage setMessage(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor accessor) {
+        chatMessage.setSender(accessor.getUser().getName());
         return chatMessage;
     }
 
     @SendTo("/topic/{topicName}")
     @MessageMapping("{topicName}/chat.addUser")
     public ChatMessage addUser(@DestinationVariable("topicName") String topicName, @Payload ChatMessage chatMessage, SimpMessageHeaderAccessor accessor) {
-        accessor.getSessionAttributes().put("username", chatMessage.getSender());
         accessor.getSessionAttributes().put("topicName", topicName);
+        chatMessage.setSender(accessor.getUser().getName());
+        chatMessage.setContent(accessor.getUser().getName() + " joined " + topicName + "!");
         return chatMessage;
     }
 

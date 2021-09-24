@@ -1,6 +1,7 @@
 package learn.example.springchat.config.interceptor;
 
 import learn.example.springchat.model.AppUser;
+import learn.example.springchat.model.ChatMessage;
 import learn.example.springchat.util.JwtConverter;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -27,10 +28,8 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        switch (accessor.getCommand()) {
-            case CONNECT:
-                parseAuthorizationHeader(accessor);
-                break;
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            parseAuthorizationHeader(accessor);
         }
         return message;
     }
