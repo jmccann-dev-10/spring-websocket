@@ -1,4 +1,4 @@
-FROM node:12-slim AS build
+FROM node:14-slim AS build
 COPY . /usr/tmp
 WORKDIR /usr/tmp
 RUN npm install \
