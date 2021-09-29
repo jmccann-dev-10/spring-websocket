@@ -1,5 +1,4 @@
-FROM node AS build
-# COPY . /usr/src/app
+FROM node:12-slim AS build
 COPY . /usr/tmp
 WORKDIR /usr/tmp
 RUN npm install \
@@ -7,5 +6,5 @@ RUN npm install \
     && mv ./build /usr/src/app \
     && rm -r /usr/tmp
 
-FROM nginx
+FROM nginx:latest
 COPY --from=build usr/src/app /usr/share/nginx/html
