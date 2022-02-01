@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-function MessageContainer({messagesState = {messages:[]}, username = ''}) {
+function MessageContainer({messages = [], username = ''}) {
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -9,14 +9,14 @@ function MessageContainer({messagesState = {messages:[]}, username = ''}) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messagesState]);
+    }, [messages]);
 
     function Message({ m }) {
         const isFromMe = m.sender === username;
         const classes = `px-3 border-bottom py-2 text-${isFromMe ? 'right' : 'left'}`;
         return (
             <>
-                {m.type === 'CHAT' && (<div className={classes}><h6 style={{backgroundColor: m.color}} className="badge rounded-pill p-2 badge-info">{m.sender}</h6><div className="mx-2">{m.content}</div></div>)}
+                {m.type === 'CHAT' && (<div className={classes}><h6 className="badge rounded-pill p-2 badge-info">{m.sender}</h6><div className="mx-2">{m.content}</div></div>)}
                 {m.type !== 'CHAT' && (<div className="text-center bg-secondary text-light py-3 border-bottom border-dark">{m.content}</div>)}
             </>)
     }
@@ -24,7 +24,7 @@ function MessageContainer({messagesState = {messages:[]}, username = ''}) {
     return (
         <div className="mb-2 message-container-outer" >
             <div className="d-flex flex-column message-container-inner">
-                    {messagesState.messages && messagesState.messages.map(msg => (<Message key={msg.id} m={msg} />))}
+                    {messages && messages.map(msg => (<Message key={msg.id} m={msg} />))}
                 <div ref={messagesEndRef} />
             </div>
         </div>
