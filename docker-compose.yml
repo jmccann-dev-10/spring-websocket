@@ -37,3 +37,4 @@ services:
 
 volumes:
   user-api-db-data:
+    driver: local
