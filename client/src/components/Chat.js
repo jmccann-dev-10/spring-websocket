@@ -1,20 +1,40 @@
-import { useContext, useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router";
+import { useContext, useEffect, useReducer, useState } from "react";
+import { useParams } from "react-router";
 import AuthContext from "../AuthContext";
 import { Client } from "@stomp/stompjs";
 import MessageContainer from "./MessageContainer";
 
+const messageReducer = (currentState, action) => {
+    const newMessageState = {...currentState};
+    const users = newMessageState.users;
+
+    // assign color
+    if (action.type === 'LEAVE') {
+        delete users[action.sender];
+    } else if (!users[action.sender]) {
+        users[action.sender] = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+    }
+    action.color = users[action.sender];
+
+    // add new messages
+    const messages = newMessageState.messages;
+    if (action && !messages.find(msg => action.id === msg.id)) {
+        messages.push(action);
+        if (messages.length > 15) {
+            messages.shift();
+        }
+    }
+    return newMessageState;
+}
+
 function Chat() {
 
     const [message, setMessage] = useState('');
-    const [payload, setPayload] = useState();
-    const [messages, setMessages] = useState([]);
+    const [messageState, reduceState] = useReducer(messageReducer, {users: {}, messages: []});
     const [client, setClient] = useState();
-    const [subscription, setSubscription] = useState();
 
     const { topic } = useParams();
     const auth = useContext(AuthContext);
-    const history = useHistory();
 
     useEffect(()=>{
         const newClient = new Client({
@@ -25,9 +45,16 @@ function Chat() {
             heartbeatOutgoing: 4000
         });
 
+        const onMessageReceived = (payload) => {
+            const newMessage = JSON.parse(payload.body);
+    
+            reduceState(newMessage);
+        }
+
+        let sub;
+
         newClient.onConnect = () => {
-            const sub = newClient.subscribe(`/topic/${topic}`, onMessageReceived);
-            setSubscription(sub);
+            sub = newClient.subscribe(`/topic/${topic}`, onMessageReceived);
             newClient.publish({destination: `/app/${topic}/chat.addUser`, body: JSON.stringify({type: 'JOIN'})});
         }
     
@@ -36,25 +63,15 @@ function Chat() {
         }
 
         newClient.activate();
-
         setClient(newClient);
-    },[auth.user.token, topic])
 
-    useEffect(()=>{
-        const messagesCopy = [...messages];
-        if (payload && !messagesCopy.find(msg => payload.id === msg.id)) {
-            messagesCopy.push(payload);
-            if (messagesCopy.length > 15) {
-                messagesCopy.shift();
+        // clean up the client when the component is dismissed.
+        return () => {
+            if (newClient && sub) {
+                newClient.deactivate();
             }
-            setMessages(messagesCopy);
         }
-    }, [payload, messages]);
-
-    const onMessageReceived = (payload) => {
-        const newMessage = JSON.parse(payload.body);
-        setPayload(newMessage);
-    }
+    },[auth.user.token, topic])
 
     const sendMessage = (event) => {
         event.preventDefault();
@@ -62,19 +79,11 @@ function Chat() {
         setMessage('');
     }
 
-    history.listen(() => {
-        if (client && subscription) {
-            client.deactivate();
-            setSubscription(null);
-            setClient(null);
-        }
-    });
-
     return (
         <>
             <h2>Chat!</h2>
             <div className="mb-1">Current Room: <span className="ml-3">{topic}</span></div>
-            <MessageContainer messages={messages} username={auth.user.username} />
+            <MessageContainer messagesState={messageState} username={auth.user.username} />
             <div>
                 <form onSubmit={sendMessage}>
                     <div className="form-group">

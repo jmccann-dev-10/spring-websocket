@@ -8,3 +8,18 @@
 .no-style:hover {
   text-decoration: underline;
 }
+
+.message-container-outer {
+  height: 65vh;
+  max-height: 65vh;
+  overflow-y: hidden;
+  border-radius: 1em;
+  border: 1px solid rgba(0,0,0,.125);
+}
+
+.message-container-inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden auto;
+  border: none;
+}
